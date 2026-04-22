@@ -14,6 +14,10 @@ Unlike the original web service, Carbonite runs entirely in your browser, requir
 
 ---
 
+![Carbonite screenshot](screenshots/screenshot-carbonite.png)
+
+---
+
 ## Feature parity with carbon.now.sh
 
 * Syntax highlighting for **36 languages** out of the box (Java, Python, Bash, Shell, JSON, XML, YAML, HTML, CSS, SCSS, SQL, Markdown, JavaScript, TypeScript, C, C++, C#, Rust, Go, Kotlin, Swift, Ruby, PHP, Lua, R, Scala, Dockerfile, Makefile, INI, Diff, GraphQL, and more)

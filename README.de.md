@@ -14,6 +14,10 @@ Anders als der Original-Webdienst läuft Carbonite vollständig im Browser, ben�
 
 ---
 
+![Carbonite Screenshot](screenshots/screenshot-carbonite.png)
+
+---
+
 ## Funktionsumfang wie bei carbon.now.sh
 
 * Syntax-Highlighting für **36 Sprachen** ab Werk (Java, Python, Bash, Shell, JSON, XML, YAML, HTML, CSS, SCSS, SQL, Markdown, JavaScript, TypeScript, C, C++, C#, Rust, Go, Kotlin, Swift, Ruby, PHP, Lua, R, Scala, Dockerfile, Makefile, INI, Diff, GraphQL und mehr)
