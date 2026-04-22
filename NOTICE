@@ -1,0 +1,79 @@
+Carbonite
+=========
+
+This product is a single-file local replacement for code-screenshot tools.
+It is conceptually inspired by carbon.now.sh by Dawn Labs, but contains
+none of its source code; Carbonite is an independent reimplementation.
+
+The implementation was developed with the assistance of Claude
+(https://claude.ai/) by Anthropic.
+
+The distributed file `carbonite_offline.html` includes the unmodified
+source code of the third-party components listed below, each of which
+remains under its original license. The complete, verbatim license texts
+are reproduced in the LICENSE file that accompanies this distribution.
+
+
+--------------------------------------------------------------------------
+Third-party components bundled in carbonite_offline.html
+--------------------------------------------------------------------------
+
+  Component   : highlight.js
+  Version     : 11.9.0
+  Purpose     : Syntax highlighting for 36 programming languages
+  License     : BSD-3-Clause
+  Source      : https://github.com/highlightjs/highlight.js
+  Copyright   : Copyright (c) 2006, Ivan Sagalaev. All rights reserved.
+
+  Component   : highlight.js syntax themes (23 stylesheets)
+  Version     : 11.9.0
+  Purpose     : Color schemes for highlighted source code
+  License     : BSD-3-Clause (theme files inherit the project license)
+  Source      : https://github.com/highlightjs/highlight.js/tree/main/src/styles
+  Copyright   : Various contributors (per-theme attribution preserved as
+                CSS comments inside each bundled theme).
+
+  Component   : html-to-image
+  Version     : 1.11.11
+  Purpose     : DOM-to-PNG / DOM-to-SVG conversion for export
+  License     : MIT
+  Source      : https://github.com/bubkoo/html-to-image
+  Copyright   : Copyright (c) 2017-2023 W.Y.
+
+  Component   : js-beautify
+  Version     : 1.15.1
+  Purpose     : Code formatting for JavaScript, TypeScript, HTML, XML, CSS
+  License     : MIT
+  Source      : https://github.com/beautify-web/js-beautify
+  Copyright   : Copyright (c) 2007-2018 Einar Lielmanis, Liam Newman,
+                and contributors.
+
+  Component   : sql-formatter
+  Version     : 15.4.9
+  Purpose     : SQL formatting with dialect auto-detection
+  License     : MIT
+  Source      : https://github.com/sql-formatter-org/sql-formatter
+  Copyright   : Copyright (c) 2016-2020 ZeroTurnaround LLC
+                Copyright (c) 2020-2021 George Leslie-Waksman and other
+                                        contributors
+                Copyright (c) 2021-Present inferrinizzard and other
+                                          contributors
+
+
+--------------------------------------------------------------------------
+Components NOT bundled but referenced for typography
+--------------------------------------------------------------------------
+
+Carbonite uses only operating-system-resident monospace fonts for code
+display (Consolas, Menlo, SF Mono, DejaVu Sans Mono, Liberation Mono,
+Lucida Console, Courier New, Monaco). No web fonts are loaded, embedded,
+or otherwise included in the distribution.
+
+
+--------------------------------------------------------------------------
+Carbonite's own code
+--------------------------------------------------------------------------
+
+  Component   : Carbonite
+  License     : MIT
+  Copyright   : Copyright (c) 2026 Carbonite contributors
