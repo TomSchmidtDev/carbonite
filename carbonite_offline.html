@@ -1789,23 +1789,23 @@ const THEMES_CSS = {"atom-one-dark": {"name": "Atom One Dark", "css": "pre code.
 <script>
 "use strict";
 
-const DEFAULT_CODE = `// Willkommen bei Carbonite – 100% offline.
-// Dieser Editor macht KEINE Netzwerkaufrufe.
+const DEFAULT_CODE = `import java.util.List;
+import java.util.Optional;
 
-import { useState, useEffect } from "react";
+public class OrderService {
 
-export function Counter({ initial = 0 }) {
-  const [count, setCount] = useState(initial);
+    private final OrderRepository repo;
 
-  useEffect(() => {
-    document.title = \`Count: \${count}\`;
-  }, [count]);
+    public Order create(String customerId, List<LineItem> items) {
+        double total = items.stream()
+            .mapToDouble(item -> item.price() * item.quantity())
+            .sum();
+        return repo.save(new Order(customerId, items, total));
+    }
 
-  return (
-    <button onClick={() => setCount(c => c + 1)}>
-      Klicks: {count}
-    </button>
-  );
+    public Optional<Order> findById(String id) {
+        return repo.findById(id);
+    }
 }`;
 
 const el = (id) => document.getElementById(id);
@@ -2398,10 +2398,7 @@ const FORMAT_SUPPORT = {
   // High-quality formatters
   javascript:   "jsb-js",
   js:           "jsb-js",
-  typescript:   "jsb-js",   // js-beautify handles most TS OK
-  ts:           "jsb-js",
   jsx:          "jsb-js",
-  tsx:          "jsb-js",
   json:         "json",
   json5:        "json",
   html:         "jsb-html",
@@ -2413,20 +2410,23 @@ const FORMAT_SUPPORT = {
   less:         "jsb-css",
   sass:         "jsb-css",
   sql:          "sql",
-  // C-family: js-beautify's JS mode handles braces, strings & comments well
-  java:         "jsb-js",
-  c:            "jsb-js",
-  cpp:          "jsb-js",
-  csharp:       "jsb-js",
-  kotlin:       "jsb-js",
-  swift:        "jsb-js",
-  rust:         "jsb-js",
-  go:           "jsb-js",
-  dart:         "jsb-js",
-  php:          "jsb-js",
-  objectivec:   "jsb-js",
-  scala:        "jsb-js",
-  groovy:       "jsb-js",
+  // C-family: js-beautify JS mode + generic/arrow postprocessing
+  java:         "jsb-cfamily",
+  c:            "jsb-cfamily",
+  cpp:          "jsb-cfamily",
+  csharp:       "jsb-cfamily",
+  kotlin:       "jsb-cfamily",
+  swift:        "jsb-cfamily",
+  rust:         "jsb-cfamily",
+  go:           "jsb-cfamily",
+  dart:         "jsb-cfamily",
+  php:          "jsb-cfamily",
+  objectivec:   "jsb-cfamily",
+  scala:        "jsb-cfamily",
+  groovy:       "jsb-cfamily",
+  typescript:   "jsb-cfamily",
+  ts:           "jsb-cfamily",
+  tsx:          "jsb-cfamily",
   // Whitespace-sensitive: never reformat, but clean trailing whitespace
   python:       "safe-ws",
   yaml:         "safe-ws",
@@ -2571,6 +2571,18 @@ function fmt_jsb_js(src) {
   });
 }
 
+function fmt_jsb_cfamily(src) {
+  let out = fmt_jsb_js(src);
+  // Restore lambda/pointer arrows broken into "- >" by js-beautify
+  out = out.replace(/(\S) - > /g, '$1 -> ');
+  // Restore generic type brackets broken into "Type < T >" by js-beautify.
+  // Run multiple passes to handle nesting like Map<String, List<Integer>>.
+  for (let i = 0; i < 4; i++) {
+    out = out.replace(/(\w) < ([\w][\w\[\] ,.<>?*&]*?) >/g, '$1<$2>');
+  }
+  return out;
+}
+
 function fmt_jsb_html(src) {
   const ind = getIndent();
   return window.beautifier.html(src, {
@@ -2619,7 +2631,8 @@ const FORMATTERS = {
   "json":       fmt_json,
   "xml":        fmt_xml,
   "sql":        fmt_sql,
-  "jsb-js":     fmt_jsb_js,
+  "jsb-js":       fmt_jsb_js,
+  "jsb-cfamily":  fmt_jsb_cfamily,
   "jsb-html":   fmt_jsb_html,
   "jsb-css":    fmt_jsb_css,
   "safe-ws":    fmt_safe_ws,
@@ -2653,7 +2666,7 @@ function doBeautify() {
     return;
   }
   if (after === before) {
-    flash("Bereits sauber formatiert");
+    flash("Already formatted");
     return;
   }
   _beautifyUndo = before;
@@ -2661,7 +2674,8 @@ function doBeautify() {
   render();
   const labels = {
     "json": "JSON", "xml": "XML", "sql": "SQL",
-    "jsb-js": "js-beautify", "jsb-html": "js-beautify (html)",
+    "jsb-js": "js-beautify", "jsb-cfamily": "js-beautify",
+    "jsb-html": "js-beautify (html)",
     "jsb-css": "js-beautify (css)", "safe-ws": "Whitespace-Clean",
     "noop": "unchanged"
   };
@@ -2670,12 +2684,12 @@ function doBeautify() {
 
 el("btnBeautify").addEventListener("click", doBeautify);
 el("btnBeautifyUndo").addEventListener("click", () => {
-  if (_beautifyUndo == null) { flash("Nichts zum Widerrufen"); return; }
+  if (_beautifyUndo == null) { flash("Nothing to undo"); return; }
   const cur = codeInput.value;
   codeInput.value = _beautifyUndo;
-  _beautifyUndo = cur; // allow re-do
+  _beautifyUndo = cur;
   render();
-  flash("↶ Widerrufen");
+  flash("↶ Undone");
 });
 
 /* ---------- Persistence (localStorage – purely local, no network) ----------
@@ -2804,6 +2818,7 @@ function wireAutoSave() {
 
 /* ---------- Init ---------- */
 codeInput.value = DEFAULT_CODE;
+el("language").value = "java";
 applyTheme("atom-one-dark");
 applyType();
 applyShadow();
