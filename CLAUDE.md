@@ -37,3 +37,13 @@ Three layers enforce the offline/privacy guarantee — do not break them:
 - **Export shortcuts**: `Ctrl/⌘+S` → PNG, `Ctrl/⌘+E` → HTML, `Ctrl/⌘+Shift+C` → copy PNG to clipboard.
 - **Settings persistence**: all UI state auto-saves to `localStorage` and restores on reload.
 - **Indentation**: a single global setting (2/4/8 spaces or Tab) drives all formatters.
+
+## Versioning and changelog
+
+Every change must be logged in `CHANGELOG.md` using semver:
+
+- **Bugfix** → increment the **build/patch** version (e.g. `1.0.0` → `1.0.1`)
+- **New feature** → increment the **minor** version and reset patch to 0 (e.g. `1.0.3` → `1.1.0`)
+- **Breaking change** → increment the **major** version and reset minor + patch to 0
+
+Add a new entry at the top of `CHANGELOG.md` for each change with the version, date, and a short description.

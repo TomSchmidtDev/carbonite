@@ -199,7 +199,7 @@
     background-position: 0 0, 0 10px, 10px -10px, 10px 0;
     background-color: #090909;
     overflow: auto;
-    display: flex; align-items: center; justify-content: center;
+    display: flex; align-items: safe center; justify-content: safe center;
     padding: 40px; position: relative;
   }
   main.canvas::before {
@@ -241,6 +241,10 @@
     min-height: 38px;
   }
   .window-header.hidden { display: none; }
+  .window-header.no-title .window-title-wrap { display: none; }
+  .window-header.no-title .header-spacer { display: none; }
+  .window-header.no-title .traffic.windows { margin-left: auto; }
+  .window-title-wrap { flex: 1; display: flex; justify-content: center; align-items: center; }
   .traffic { display: flex; gap: 6px; }
   .traffic span { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
   .traffic.mac span:nth-child(1) { background: #ff5f56; }
@@ -256,10 +260,12 @@
   .traffic.windows span:nth-child(2)::before { content: "▢"; }
   .traffic.windows span:nth-child(3)::before { content: "✕"; }
 
-  .window-title-input {
-    flex: 1; background: transparent; border: none;
-    color: rgba(255,255,255,.55); text-align: center;
-    font-family: inherit; font-size: 12px; outline: none; padding: 0;
+  input.window-title-input {
+    width: auto; background: var(--title-bg, transparent); border: none;
+    color: var(--title-color, rgba(255,255,255,.55)); text-align: center;
+    font-family: inherit; font-size: 12px; outline: none;
+    padding: 2px 12px; border-radius: 3px;
+    min-width: 60px; max-width: 100%;
   }
 
   .code-wrap { position: relative; display: flex; padding: 14px 0 18px; background: transparent; }
@@ -382,8 +388,10 @@
       <div id="card">
         <div class="window-header" id="windowHeader">
           <div class="traffic mac" id="traffic"><span></span><span></span><span></span></div>
-          <input type="text" class="window-title-input" id="windowTitle" value="" placeholder="" />
-          <div style="width:60px;"></div>
+          <div class="window-title-wrap">
+            <input type="text" class="window-title-input" id="windowTitle" value="" placeholder="" />
+          </div>
+          <div class="header-spacer" style="width:60px;"></div>
         </div>
         <div class="code-wrap">
           <div class="line-numbers" id="lineNumbers"></div>
@@ -428,6 +436,25 @@
       <label class="field">
         <div class="lbl">Title</div>
         <input type="text" id="titleInput" placeholder="Optional window title" />
+      </label>
+      <label class="toggle"><span class="lbl">Show title</span>
+        <input type="checkbox" id="showTitle" checked /><span class="switch"></span>
+      </label>
+      <div class="row">
+        <label class="field">
+          <div class="lbl">Title BG</div>
+          <input type="color" id="titleBg" value="#3a3f4b" />
+        </label>
+        <label class="field">
+          <div class="lbl">Title Color</div>
+          <input type="color" id="titleColor" value="#ffffff" />
+        </label>
+      </div>
+      <label class="toggle"><span class="lbl">Auto Title BG (transparent)</span>
+        <input type="checkbox" id="autoTitleBg" checked /><span class="switch"></span>
+      </label>
+      <label class="toggle"><span class="lbl">Auto Title Color</span>
+        <input type="checkbox" id="autoTitleColor" checked /><span class="switch"></span>
       </label>
       <label class="toggle"><span class="lbl">Line numbers</span>
         <input type="checkbox" id="showLines" /><span class="switch"></span>
@@ -2044,17 +2071,52 @@ el("windowStyle").addEventListener("change", () => {
   const v = el("windowStyle").value;
   const hdr = el("windowHeader");
   const traffic = el("traffic");
+  const spacer = hdr.querySelector(".header-spacer");
   hdr.classList.remove("hidden");
   traffic.style.visibility = "visible";
   traffic.className = "traffic";
-  if (v === "mac") traffic.classList.add("mac");
-  else if (v === "windows") traffic.classList.add("windows");
-  else if (v === "none") traffic.style.visibility = "hidden";
-  else if (v === "hide") hdr.classList.add("hidden");
+  spacer.style.display = "";
+  if (v === "mac") {
+    traffic.classList.add("mac");
+    if (hdr.firstChild !== traffic) hdr.insertBefore(traffic, hdr.firstChild);
+  } else if (v === "windows") {
+    traffic.classList.add("windows");
+    hdr.appendChild(traffic);   // moves to last position → right side
+    spacer.style.display = "none";
+  } else if (v === "none") {
+    traffic.style.visibility = "hidden";
+    if (hdr.firstChild !== traffic) hdr.insertBefore(traffic, hdr.firstChild);
+  } else if (v === "hide") {
+    hdr.classList.add("hidden");
+  }
 });
 
 el("titleInput").addEventListener("input", () => {
   el("windowTitle").value = el("titleInput").value;
+});
+
+el("showTitle").addEventListener("change", () => {
+  el("windowHeader").classList.toggle("no-title", !el("showTitle").checked);
+});
+
+el("titleBg").addEventListener("input", () => {
+  el("autoTitleBg").checked = false;
+  card.style.setProperty("--title-bg", el("titleBg").value);
+});
+
+el("autoTitleBg").addEventListener("change", () => {
+  if (el("autoTitleBg").checked) card.style.removeProperty("--title-bg");
+  else card.style.setProperty("--title-bg", el("titleBg").value);
+});
+
+el("titleColor").addEventListener("input", () => {
+  el("autoTitleColor").checked = false;
+  card.style.setProperty("--title-color", el("titleColor").value);
+});
+
+el("autoTitleColor").addEventListener("change", () => {
+  if (el("autoTitleColor").checked) card.style.removeProperty("--title-color");
+  else card.style.setProperty("--title-color", el("titleColor").value);
 });
 
 el("fontFamily").addEventListener("change", () => {
@@ -2102,28 +2164,41 @@ const H2I_OPTS = () => ({
   fontEmbedCSS: "",      // prevent any font embedding attempts
 });
 
+function withNoScrollbars(fn) {
+  const s = document.createElement("style");
+  s.textContent = "::-webkit-scrollbar{width:0!important;height:0!important}*{scrollbar-width:none!important}";
+  document.head.appendChild(s);
+  return Promise.resolve().then(fn).finally(() => s.remove());
+}
+
 async function exportPng(download = true) {
-  const dataUrl = await htmlToImage.toPng(stage, H2I_OPTS());
-  if (download) {
-    const a = document.createElement("a");
-    a.download = filename("png"); a.href = dataUrl; a.click();
-    flash("PNG exportiert");
-  }
-  return dataUrl;
+  return withNoScrollbars(async () => {
+    const dataUrl = await htmlToImage.toPng(stage, H2I_OPTS());
+    if (download) {
+      const a = document.createElement("a");
+      a.download = filename("png"); a.href = dataUrl; a.click();
+      flash("PNG exportiert");
+    }
+    return dataUrl;
+  });
 }
 
 async function exportSvg() {
-  const dataUrl = await htmlToImage.toSvg(stage, H2I_OPTS());
-  const a = document.createElement("a");
-  a.download = filename("svg"); a.href = dataUrl; a.click();
-  flash("SVG exportiert");
+  return withNoScrollbars(async () => {
+    const dataUrl = await htmlToImage.toSvg(stage, H2I_OPTS());
+    const a = document.createElement("a");
+    a.download = filename("svg"); a.href = dataUrl; a.click();
+    flash("SVG exportiert");
+  });
 }
 
 async function copyPng() {
   try {
-    const blob = await htmlToImage.toBlob(stage, H2I_OPTS());
-    await navigator.clipboard.write([ new ClipboardItem({ "image/png": blob }) ]);
-    flash("PNG in Zwischenablage");
+    await withNoScrollbars(async () => {
+      const blob = await htmlToImage.toBlob(stage, H2I_OPTS());
+      await navigator.clipboard.write([ new ClipboardItem({ "image/png": blob }) ]);
+      flash("PNG in Zwischenablage");
+    });
   } catch (e) {
     console.error(e);
     flash("Kopieren fehlgeschlagen");
@@ -2153,8 +2228,15 @@ function exportHtml() {
   const lh = (el("lineHeight").value/100).toFixed(2);
   const title = el("titleInput").value || "";
   const wStyle = el("windowStyle").value;
+  const showTitleField = el("showTitle").checked;
   const showLines = el("showLines").checked;
   const lines = codeInput.value.split("\n").length;
+  const titleBgVal = el("autoTitleBg").checked
+    ? "transparent"
+    : el("titleBg").value;
+  const titleColorVal = el("autoTitleColor").checked
+    ? "rgba(255,255,255,.55)"
+    : el("titleColor").value;
 
   let lineNumHtml = "";
   if (showLines) for (let i = 1; i <= lines; i++) lineNumHtml += `<div>${i}</div>`;
@@ -2166,11 +2248,16 @@ function exportHtml() {
     trafficHtml = `<div class="traffic windows"><span>—</span><span>▢</span><span>✕</span></div>`;
   }
 
+  const isWindows = wStyle === "windows";
+  const spacerHtml = (isWindows || !showTitleField) ? "" : `<div style="width:60px"></div>`;
+  const titleWrapHtml = showTitleField
+    ? `<div class="cbn-title-wrap"><span class="cbn-title">${escapeHtml(title)}</span></div>`
+    : "";
   const headerHtml = wStyle === "hide" ? "" : `
     <div class="cbn-header">
-      ${trafficHtml}
-      <div class="cbn-title">${escapeHtml(title)}</div>
-      <div style="width:60px"></div>
+      ${isWindows ? titleWrapHtml : trafficHtml}
+      ${isWindows ? trafficHtml : titleWrapHtml}
+      ${spacerHtml}
     </div>`;
 
   const html = `<!DOCTYPE html>
@@ -2187,7 +2274,8 @@ html, body { margin:0; padding:0; background:#111; display:flex; align-items:cen
 .traffic { display:flex; gap:6px; }
 .traffic.windows { gap:0; }
 .traffic.windows span { width:28px; height:14px; border-radius:0; background:transparent; color:rgba(255,255,255,.65); text-align:center; font-size:10px; line-height:14px; }
-.cbn-title { flex:1; text-align:center; color:rgba(255,255,255,.55); font-size:12px; }
+.cbn-title-wrap { flex:1; display:flex; justify-content:center; align-items:center; }
+.cbn-title { color:${titleColorVal}; font-size:12px; background:${titleBgVal}; border-radius:3px; padding:2px 12px; }
 .cbn-body { display:flex; padding:14px 0 18px; }
 .cbn-lines { padding: 0 14px 0 20px; color: rgba(255,255,255,.25); font-size: ${size}; line-height: ${lh}; text-align:right; min-width:40px; user-select:none; white-space:pre; }
 pre.cbn-pre { margin:0; padding:0 24px 0 6px; flex:1; font-size: ${size}; line-height: ${lh}; white-space:pre; }
@@ -2703,12 +2791,17 @@ const SAVED_FIELDS = [
   ["language",     "value"],
   ["windowStyle",  "value"],
   ["titleInput",   "value"],
+  ["showTitle",    "checked"],
   ["showLines",    "checked"],
   ["showWatermark","checked"],
   ["transparent",  "checked"],
   ["customBg",     "value"],
   ["cardBg",       "value"],
   ["autoCardBg",   "checked"],
+  ["titleBg",       "value"],
+  ["autoTitleBg",   "checked"],
+  ["titleColor",    "value"],
+  ["autoTitleColor","checked"],
   ["padX",         "value"],
   ["padY",         "value"],
   ["radius",       "value"],
@@ -2777,7 +2870,21 @@ function applySettings(s) {
   // Window header (re-trigger handler logic)
   el("windowStyle").dispatchEvent(new Event("change"));
   el("windowTitle").value = el("titleInput").value;
+  el("windowHeader").classList.toggle("no-title", !el("showTitle").checked);
   el("watermark").classList.toggle("hidden", !el("showWatermark").checked);
+
+  // Title text background
+  if (!el("autoTitleBg").checked && s.titleBg) {
+    card.style.setProperty("--title-bg", s.titleBg);
+  } else {
+    card.style.removeProperty("--title-bg");
+  }
+  // Title text color
+  if (!el("autoTitleColor").checked && s.titleColor) {
+    card.style.setProperty("--title-color", s.titleColor);
+  } else {
+    card.style.removeProperty("--title-color");
+  }
 
   // Background — restore gradient/color/transparent
   document.querySelectorAll(".bg-swatches .sw").forEach(sw => sw.classList.remove("active"));
