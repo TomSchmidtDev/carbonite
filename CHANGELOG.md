@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.1] — 2026-05-11
+
+### Fixed
+- **Line number contrast on light themes** — line numbers were hardcoded to `rgba(255,255,255,.25)` (white/translucent), making them invisible against light theme backgrounds (GitHub, Atom One Light, Gruvbox Light, Solarized Light, etc.). `applyTheme` now detects whether the active theme background is light or dark and sets `--line-num-color` / `--line-num-dim-color` accordingly.
+
+---
+
 ## [1.3.0] — 2026-04-24
 
 ### Added

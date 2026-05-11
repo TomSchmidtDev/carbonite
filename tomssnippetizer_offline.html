@@ -271,7 +271,7 @@
   .code-wrap { position: relative; display: flex; padding: 14px 0 18px; background: transparent; }
   .line-numbers {
     user-select: none; padding: 0 14px 0 20px;
-    color: rgba(255,255,255,.25);
+    color: var(--line-num-color, rgba(255,255,255,.25));
     font-family: var(--code-font, var(--mono));
     font-size: var(--code-size, 14px);
     line-height: var(--code-lh, 1.55);
@@ -279,7 +279,7 @@
   }
   .line-numbers.hidden { display: none; }
   .line-numbers div { white-space: pre; }
-  .line-numbers .wrap-cont { color: rgba(255,255,255,.12); }
+  .line-numbers .wrap-cont { color: var(--line-num-dim-color, rgba(255,255,255,.12)); }
 
   pre.code-pre {
     margin: 0; padding: 0 24px 0 6px; flex: 1;
@@ -1919,6 +1919,32 @@ function applyTheme(key) {
   const t = THEMES_CSS[key];
   if (!t) return;
   themeStyleEl.textContent = t.css;
+  const bgMatch = t.css.match(/\.hljs\s*\{[^}]*background\s*:\s*([^;}\s][^;}]*)/);
+  const bgColor = bgMatch ? bgMatch[1].trim() : "#282c34";
+  const isLight = isLightColor(bgColor);
+  const card = document.getElementById("card");
+  if (card) {
+    card.style.setProperty("--line-num-color", isLight ? "rgba(0,0,0,.3)" : "rgba(255,255,255,.25)");
+    card.style.setProperty("--line-num-dim-color", isLight ? "rgba(0,0,0,.15)" : "rgba(255,255,255,.12)");
+  }
+}
+
+function isLightColor(color) {
+  const c = color.replace(/\s/g, "");
+  let r, g, b;
+  const hex6 = c.match(/^#([0-9a-f]{6})$/i);
+  const hex3 = c.match(/^#([0-9a-f]{3})$/i);
+  const rgb = c.match(/^rgb\((\d+),(\d+),(\d+)\)$/i);
+  if (hex6) {
+    r = parseInt(hex6[1].slice(0,2),16); g = parseInt(hex6[1].slice(2,4),16); b = parseInt(hex6[1].slice(4,6),16);
+  } else if (hex3) {
+    r = parseInt(hex3[1][0]+hex3[1][0],16); g = parseInt(hex3[1][1]+hex3[1][1],16); b = parseInt(hex3[1][2]+hex3[1][2],16);
+  } else if (rgb) {
+    r = +rgb[1]; g = +rgb[2]; b = +rgb[3];
+  } else {
+    return false;
+  }
+  return (r * 299 + g * 587 + b * 114) / 1000 > 128;
 }
 
 /* ---------- Gradient swatches ---------- */
